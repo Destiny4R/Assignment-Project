@@ -1,0 +1,20 @@
+﻿@page
+@model IndexModel
+@{
+    ViewData["Title"] = "GIS early warning for farmer/herder conflict";
+}
+
+<div class="p-5 mb-4 bg-light rounded-3">
+    <div class="container-fluid py-3">
+        <h1 class="display-6 fw-bold">GIS-Based Early Warning &amp; Real-Time Monitoring</h1>
+        <p class="col-md-9 fs-5">Public GPS reporting → ASP.NET Core + MySQL → SignalR live dashboard → Leaflet GIS map → risk scoring, hotspot detection &amp; early-warning alerts → officer response &amp; resolution.</p>
+        <a class="btn btn-danger btn-lg" asp-page="/Report/Index">Report an incident (public, no login)</a>
+        <a class="btn btn-primary btn-lg ms-2" asp-page="/Dashboard/Index">Officer dashboard</a>
+    </div>
+</div>
+
+<div class="row g-3">
+    <div class="col-md-4"><div class="card h-100"><div class="card-body"><h5>1. Report with GPS</h5><p class="small text-muted mb-0">Browser Geolocation API captures latitude/longitude with explicit consent; validated server-side (-90..90, -180..180), rate-limited, stored in MySQL.</p></div></div></div>
+    <div class="col-md-4"><div class="card h-100"><div class="card-body"><h5>2. Monitor live</h5><p class="small text-muted mb-0">SignalR pushes each report to the dashboard instantly — new table row, map marker and counters with no refresh.</p></div></div></div>
+    <div class="col-md-4"><div class="card h-100"><div class="card-body"><h5>3. Early warning</h5><p class="small text-muted mb-0">Configurable risk rules score every incident 0–100, classify Low→Critical, cluster hotspots and raise alerts.</p></div></div></div>
+</div>

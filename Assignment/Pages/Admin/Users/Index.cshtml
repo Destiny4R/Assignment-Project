@@ -1,0 +1,25 @@
+@page
+@model Assignment.Pages.Admin.Users.IndexModel
+@{
+    ViewData["Title"] = "Users";
+}
+<h2>Officer accounts</h2>
+<table class="table table-sm table-striped">
+    <thead><tr><th>Email</th><th>Name</th><th>Roles</th><th>Active</th><th></th></tr></thead>
+    <tbody>
+    @foreach (var u in Model.Items)
+    {
+        <tr>
+            <td>@u.User.Email</td><td>@u.User.FullName</td><td class="small">@string.Join(", ", u.Roles)</td>
+            <td>@(u.User.IsActive ? "Yes" : "No")</td>
+            <td>
+                <form method="post" asp-page-handler="Role" class="d-inline">
+                    <input type="hidden" name="userId" value="@u.User.Id" />
+                    <select name="role" class="form-select form-select-sm d-inline w-auto" asp-items="Model.RoleOptions"></select>
+                    <button class="btn btn-sm btn-outline-primary" type="submit">Set role</button>
+                </form>
+            </td>
+        </tr>
+    }
+    </tbody>
+</table>

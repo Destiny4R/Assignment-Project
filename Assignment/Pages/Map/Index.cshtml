@@ -1,0 +1,41 @@
+@page
+@model Assignment.Pages.Map.IndexModel
+@{
+    ViewData["Title"] = "GIS map";
+}
+<h2>GIS operations map</h2>
+<form method="get" class="row g-2 mb-3">
+    <div class="col-md-2">
+        <select name="risk" class="form-select" asp-items="Model.RiskOptions"><option value="">All risks</option></select>
+    </div>
+    <div class="col-md-2">
+        <select name="status" class="form-select" asp-items="Model.StatusOptions"><option value="">All statuses</option></select>
+    </div>
+    <div class="col-md-2"><input type="date" name="from" value="@Model.From?.ToString("yyyy-MM-dd")" class="form-control" /></div>
+    <div class="col-md-2"><input type="date" name="to" value="@Model.To?.ToString("yyyy-MM-dd")" class="form-control" /></div>
+    <div class="col-md-2 form-check mt-2"><input type="checkbox" name="hotspots" value="true" class="form-check-input" checked="@Model.ShowHotspots" /><label class="form-check-label">Hotspots</label></div>
+    <div class="col-md-2"><button class="btn btn-primary w-100" type="submit">Filter</button></div>
+</form>
+<div class="card">
+    <div class="card-body p-0"><div id="opsMap" style="height:600px;"></div></div>
+</div>
+
+@section Scripts {
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="~/js/live-map.js" asp-append-version="true"></script>
+    <script>
+        (async () => {
+            const q = new URLSearchParams(window.location.search);
+            const res = await fetch(`?handler=GeoJson&${q.toString()}`);
+            const geo = await res.json();
+            initLiveMap('opsMap', [], { center: [7.7322, 8.5391], zoom: 10 });
+            loadGeoJson(geo);
+            const focus = q.get('focus');
+            if (focus) {
+                const [la, lo] = focus.split(',').map(Number);
+                if (!isNaN(la) && !isNaN(lo)) focusOn(la, lo, 15);
+            }
+        })();
+    </script>
+}

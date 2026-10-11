@@ -1,0 +1,33 @@
+@page
+@model Assignment.Pages.Admin.Alerts.IndexModel
+@{
+    ViewData["Title"] = "Alerts";
+}
+<h2>Early-warning alerts</h2>
+<table class="table table-striped table-sm">
+    <thead><tr><th>Title</th><th>Message</th><th>Risk</th><th>Count</th><th>Radius</th><th>When</th><th>Status</th><th></th></tr></thead>
+    <tbody>
+    @foreach (var a in Model.Items)
+    {
+        <tr>
+            <td class="fw-bold">@a.Title</td>
+            <td class="small">@a.Message</td>
+            <td>@a.RiskLevel</td>
+            <td>@a.IncidentCount</td>
+            <td>@a.RadiusKm km</td>
+            <td class="small">@a.CreatedAt.ToLocalTime().ToString("dd/MM HH:mm")</td>
+            <td>@(a.IsAcknowledged ? "Acknowledged" : a.Status)</td>
+            <td class="text-nowrap">
+                <a asp-page="/Map/Index" asp-route-focus="@($"{a.Latitude},{a.Longitude}")" class="btn btn-sm btn-outline-primary">View on map</a>
+                @if (!a.IsAcknowledged)
+                {
+                    <form method="post" asp-page-handler="Ack" class="d-inline">
+                        <input type="hidden" name="id" value="@a.Id" />
+                        <button class="btn btn-sm btn-success" type="submit">Acknowledge</button>
+                    </form>
+                }
+            </td>
+        </tr>
+    }
+    </tbody>
+</table>

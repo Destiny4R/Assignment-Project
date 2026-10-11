@@ -1,0 +1,85 @@
+@page "{id:int}"
+@model Assignment.Pages.Incidents.DetailsModel
+@using Assignment.Models
+@{
+    ViewData["Title"] = $"Incident {Model.Item?.ReferenceNumber}";
+}
+@if (Model.Item is null)
+{
+    <div class="alert alert-warning">Incident not found.</div>
+}
+else
+{
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2>@Model.Item.ReferenceNumber <span class="badge bg-@(Model.Item.RiskLevel == RiskLevel.Critical ? "danger" : Model.Item.RiskLevel == RiskLevel.High ? "warning text-dark" : "secondary")">@Model.Item.RiskLevel (@Model.Item.RiskScore)</span> <span class="badge bg-info text-dark">@Model.Item.Status</span></h2>
+        <a asp-page="/Map/Index" asp-route-focus="@($"{Model.Item.Latitude},{Model.Item.Longitude}")" class="btn btn-outline-primary">View location on GIS map</a>
+    </div>
+    <div class="row g-3">
+        <div class="col-lg-6">
+            <div class="card mb-3">
+                <div class="card-header">Incident detail (conflict resolution)</div>
+                <div class="card-body">
+                    <dl class="row">
+                        <dt class="col-4">Type</dt><dd class="col-8">@Model.Item.IncidentType?.Name</dd>
+                        <dt class="col-4">Reported</dt><dd class="col-8">@Model.Item.ReportedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</dd>
+                        <dt class="col-4">Location</dt><dd class="col-8">@Model.Item.Latitude.ToString("F5"), @Model.Item.Longitude.ToString("F5") (acc. @Model.Item.UserLocation?.Accuracy m)</dd>
+                        <dt class="col-4">Area</dt><dd class="col-8">@Model.Item.Community, @Model.Item.Lga</dd>
+                        <dt class="col-4">Reporter</dt><dd class="col-8">@(Model.Item.ReporterName ?? "Anonymous") @(Model.Item.ReporterContact ?? "")</dd>
+                        <dt class="col-4">Officer</dt><dd class="col-8">@(Model.Item.AssignedOfficer?.FullName ?? "Unassigned")</dd>
+                        <dt class="col-4">Description</dt><dd class="col-8">@Model.Item.Description</dd>
+                        @if (!string.IsNullOrEmpty(Model.Item.ResolutionNotes)) { <dt class="col-4">Resolution</dt><dd class="col-8">@Model.Item.ResolutionNotes</dd> }
+                    </dl>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-header">GIS location</div>
+                <div class="card-body p-0"><div id="detailMap" style="height:320px;"></div></div>
+            </div>
+        </div>
+        <div class="col-lg-6">
+            <div class="card mb-3">
+                <div class="card-header">Assign officer</div>
+                <div class="card-body">
+                    <form method="post" asp-page-handler="Assign">
+                        <input type="hidden" name="id" value="@Model.Item.Id" />
+                        <div class="input-group">
+                            <select name="officerId" class="form-select" asp-items="Model.Officers"></select>
+                            <button class="btn btn-secondary" type="submit">Assign</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <div class="card mb-3">
+                <div class="card-header">Change status / resolve</div>
+                <div class="card-body">
+                    <form method="post" asp-page-handler="Status">
+                        <input type="hidden" name="id" value="@Model.Item.Id" />
+                        <div class="mb-2"><select name="next" class="form-select" asp-items="Model.StatusOptions"></select></div>
+                        <div class="mb-2"><textarea name="comment" class="form-control" rows="2" placeholder="Comment / resolution notes"></textarea></div>
+                        <button class="btn btn-primary" type="submit">Update</button>
+                    </form>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-header">Status history (audit trail)</div>
+                <ul class="list-group list-group-flush">
+                    @foreach (var h in Model.Item.StatusHistory.OrderByDescending(h => h.ChangedAt))
+                    {
+                        <li class="list-group-item small"><strong>@h.OldStatus → @h.NewStatus</strong> — @h.Comment <br /><span class="text-muted">@h.ChangedAt.ToLocalTime().ToString("dd/MM HH:mm") by @(h.ChangedByName ?? "system")</span></li>
+                    }
+                </ul>
+            </div>
+        </div>
+    </div>
+}
+@section Scripts {
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="~/js/live-map.js" asp-append-version="true"></script>
+    @if (Model.Item is not null)
+    {
+        <script>
+            initLiveMap('detailMap', [{ referenceNumber: '@Model.Item.ReferenceNumber', latitude: @Model.Item.Latitude, longitude: @Model.Item.Longitude, riskLevel: '@Model.Item.RiskLevel', status: '@Model.Item.Status' }], { center: [@Model.Item.Latitude, @Model.Item.Longitude], zoom: 14 });
+        </script>
+    }
+}

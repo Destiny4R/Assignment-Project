@@ -1,0 +1,87 @@
+@page
+@model Assignment.Pages.Dashboard.IndexModel
+@using Assignment.Models
+@{
+    ViewData["Title"] = "Monitoring dashboard";
+}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h2>Early-warning dashboard</h2>
+    <span class="badge bg-success" id="liveBadge">● LIVE</span>
+</div>
+
+<div class="row g-3 mb-3">
+    <div class="col-6 col-md-2"><div class="card text-center"><div class="card-body"><div class="h4 mb-0" id="statTotal">@Model.Stats.Total</div><div class="small text-muted">Total reports</div></div></div></div>
+    <div class="col-6 col-md-2"><div class="card text-center"><div class="card-body"><div class="h4 mb-0" id="statActive">@Model.Stats.Active</div><div class="small text-muted">Active</div></div></div></div>
+    <div class="col-6 col-md-2"><div class="card text-center"><div class="card-body"><div class="h4 mb-0">@Model.Stats.Today</div><div class="small text-muted">Today</div></div></div></div>
+    <div class="col-6 col-md-3"><div class="card text-center border-danger"><div class="card-body"><div class="h4 mb-0 text-danger" id="statCritical">@Model.Stats.Critical</div><div class="small text-muted">Critical alerts</div></div></div></div>
+    <div class="col-6 col-md-3"><div class="card text-center"><div class="card-body"><div class="h4 mb-0">@Model.Stats.Unresolved</div><div class="small text-muted">Unresolved</div></div></div></div>
+</div>
+
+<div id="alertBanner"></div>
+
+<div class="row g-3">
+    <div class="col-lg-7">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between"><span>Live GIS map</span><a asp-page="/Map/Index" class="small">Open full map</a></div>
+            <div class="card-body p-0"><div id="dashMap" style="height:420px;"></div></div>
+        </div>
+        <div class="card mt-3">
+            <div class="card-header">Active alerts</div>
+            <div class="card-body p-0">
+                <table class="table table-sm mb-0">
+                    <thead><tr><th>Title</th><th>Risk</th><th>Count</th><th>When</th><th></th></tr></thead>
+                    <tbody id="alertRows">
+                    @foreach (var a in Model.Alerts)
+                    {
+                        <tr>
+                            <td>@a.Title</td>
+                            <td><span class="badge bg-@(a.RiskLevel == RiskLevel.Critical ? "danger" : a.RiskLevel == RiskLevel.High ? "warning text-dark" : "secondary")">@a.RiskLevel</span></td>
+                            <td>@a.IncidentCount</td>
+                            <td class="small">@a.CreatedAt.ToLocalTime().ToString("HH:mm dd/MM")</td>
+                            <td><a asp-page="/Admin/Alerts/Index" class="btn btn-sm btn-outline-secondary">Manage</a></td>
+                        </tr>
+                    }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-5">
+        <div class="card">
+            <div class="card-header">Incoming reports <span class="badge bg-primary" id="newCount">live</span></div>
+            <div class="card-body p-0" style="max-height:560px;overflow:auto;">
+                <table class="table table-sm table-striped mb-0">
+                    <thead><tr><th>Ref</th><th>Type</th><th>Risk</th><th>Time</th><th>Status</th><th></th></tr></thead>
+                    <tbody id="incidentRows">
+                    @foreach (var i in Model.Recent)
+                    {
+                        <tr data-id="@i.Id">
+                            <td class="small fw-bold">@i.ReferenceNumber</td>
+                            <td class="small">@i.IncidentType?.Name</td>
+                            <td><span class="badge bg-@(i.RiskLevel == RiskLevel.Critical ? "danger" : i.RiskLevel == RiskLevel.High ? "warning text-dark" : i.RiskLevel == RiskLevel.Medium ? "info text-dark" : "success")">@i.RiskLevel</span></td>
+                            <td class="small">@i.ReportedAt.ToLocalTime().ToString("HH:mm")</td>
+                            <td class="small">@i.Status</td>
+                            <td><a asp-page="/Incidents/Details" asp-route-id="@i.Id" class="btn btn-sm btn-outline-primary">View location</a></td>
+                        </tr>
+                    }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/8.0.0/signalr.min.js"></script>
+    <script src="~/js/live-map.js" asp-append-version="true"></script>
+    <script src="~/js/monitoring.js" asp-append-version="true"></script>
+    <script>
+        const seed = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.Recent.Select(i => new { id = i.Id, referenceNumber = i.ReferenceNumber, latitude = i.Latitude, longitude = i.Longitude, riskLevel = i.RiskLevel.ToString(), status = i.Status.ToString(), incidentType = i.IncidentType!.Name, reportedAt = i.ReportedAt })));
+        initLiveMap('dashMap', seed, { center: [7.7322, 8.5391], zoom: 10 });
+        connectMonitoring({ onStats: (s) => {
+            if (s.total !== undefined) document.getElementById('statTotal').textContent = s.total;
+        }});
+    </script>
+}

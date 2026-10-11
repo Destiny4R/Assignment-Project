@@ -1,0 +1,52 @@
+@page
+@model Assignment.Pages.Report.IndexModel
+@{
+    ViewData["Title"] = "Share your location";
+}
+<div class="row justify-content-center">
+    <div class="col-lg-7">
+        <h2>Share your location</h2>
+        <p class="text-muted">No form to fill. Just consent and tap the button — your GPS coordinates are sent to the monitoring centre immediately. Other users' locations are never shown here.</p>
+
+        <div id="gpsStatus" class="alert alert-info" role="status">Waiting for your consent. Nothing has been shared yet.</div>
+
+        <form id="consentForm" method="post">
+            @Html.AntiForgeryToken()
+            <div class="form-check mb-3 p-3 border rounded bg-light">
+                <input class="form-check-input" type="checkbox" id="consent" />
+                <label class="form-check-label" for="consent"><strong>I consent to sharing my GPS location</strong> with the conflict monitoring centre for early-warning purposes.</label>
+            </div>
+            <button type="button" id="btnShare" class="btn btn-danger btn-lg w-100">Share my location now</button>
+            <button type="button" id="btnRetry" class="btn btn-link d-none">Try again</button>
+        </form>
+        <div id="submitResult" class="mt-3"></div>
+    </div>
+    <div class="col-lg-5">
+        <div class="card">
+            <div class="card-header">How it works</div>
+            <div class="card-body small">
+                <ol class="mb-0">
+                    <li>Tick the consent box.</li>
+                    <li>Tap <em>Share my location now</em> and allow the browser permission.</li>
+                    <li>Your coordinates are sent automatically — no extra fields.</li>
+                    <li>You get a reference number and the nearest known place name.</li>
+                </ol>
+            </div>
+        </div>
+        <div class="card mt-3">
+            <div class="card-header">Your captured position</div>
+            <div class="card-body">
+                <dl class="row mb-0 small">
+                    <dt class="col-5">Latitude</dt><dd class="col-7" id="showLat">—</dd>
+                    <dt class="col-5">Longitude</dt><dd class="col-7" id="showLon">—</dd>
+                    <dt class="col-5">Accuracy</dt><dd class="col-7" id="showAcc">—</dd>
+                    <dt class="col-5">Nearest place</dt><dd class="col-7" id="showPlace">—</dd>
+                </dl>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/js/gps.js" asp-append-version="true"></script>
+}
